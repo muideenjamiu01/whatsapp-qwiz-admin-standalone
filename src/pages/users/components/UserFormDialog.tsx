@@ -53,7 +53,7 @@ export function UserFormDialog({
   handleSaveUser,
   courses,
 }: UserFormDialogProps) {
-  console.log(userForm, "editingUser");
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -270,7 +270,7 @@ export function UserFormDialog({
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>
-            <Button onClick={handleSaveUser}>
+            <Button onClick={handleSaveUser} className="bg-[#005F6A] hover:bg-[#004954] text-white">
               <Save className="w-4 h-4 mr-2" />
               {editingUser ? "Update User" : "Add User"}
             </Button>

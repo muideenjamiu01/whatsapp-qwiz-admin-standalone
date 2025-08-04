@@ -1,30 +1,47 @@
-import { useState } from "react"
-import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react"
-import { Badge } from "../../../components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
-import { Checkbox } from "../../../components/ui/checkbox"
-import { Avatar, AvatarFallback } from "../../../components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../../components/ui/dropdown-menu"
-import { Button } from "../../../components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../../components/ui/dialog"
-import { toast } from "sonner"
-import { userApi } from "../../../hooks/useUsers"
+import { useState } from "react";
+import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { Badge } from "../../../components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../components/ui/table";
+import { Checkbox } from "../../../components/ui/checkbox";
+import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../../components/ui/dropdown-menu";
+import { Button } from "../../../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../../components/ui/dialog";
+import { toast } from "sonner";
+import { userApi } from "../../../hooks/useUsers";
 
-
-//  user type
+// Backend user type
 interface User {
-  id: string
-  first_name: string
-  last_name: string
-  email: string
-  staff_id: string
-  grade: string
-  opco: string
-  function: string
-  createdAt: string
-  totalCourses: string
-  completedCourses: string
-  coursesStatus: string
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  staff_id: string;
+  grade: string;
+  opco: string;
+  function: string;
+  createdAt: string;
+  totalCourses: string;
+  completedCourses: string;
+  coursesStatus: string;
 }
 
 export interface UserTableProps {
@@ -32,47 +49,55 @@ export interface UserTableProps {
   selectedUsers: string[];
   setSelectedUsers: React.Dispatch<React.SetStateAction<string[]>>;
   handleEditUser: (user: any) => void;
-refetch: () => void
+  handleDeleteUser: (userId: string) => void;
 }
 
-export function UserTable({ users, selectedUsers, setSelectedUsers, handleEditUser,refetch}: UserTableProps) {
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+export function UserTable({
+  users,
+  selectedUsers,
+  setSelectedUsers,
+  handleEditUser,
+  refetch,
+}: any) {
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   const getStatusBadge = (coursesStatus: string) => {
     // Example: "1/1" or "0/0". You can customize status logic here.
     if (coursesStatus === "0/0") {
-      return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+      return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
     }
-    const [completed, total] = coursesStatus.split("/").map(Number)
+    const [completed, total] = coursesStatus.split("/").map(Number);
     if (completed === total && total > 0) {
-      return <Badge className="bg-green-100 text-green-800">Active</Badge>
+      return <Badge className="bg-green-100 text-green-800">Active</Badge>;
     }
     if (completed < total) {
-      return <Badge className="bg-red-100 text-red-800">Inactive</Badge>
+      return <Badge className="bg-red-100 text-red-800">Inactive</Badge>;
     }
-    return <Badge variant="secondary">Unknown</Badge>
-  }
+    return <Badge variant="secondary">Unknown</Badge>;
+  };
 
   const handleDeleteClick = (user: User) => {
-    setUserToDelete(user)
-    setDeleteModalOpen(true)
-  }
+    setUserToDelete(user);
+    setDeleteModalOpen(true);
+  };
 
   const confirmDeleteUser = async () => {
     if (userToDelete) {
       try {
-        const deleteUser = await userApi.deleteUser({userId:userToDelete.id})
-        toast.success(deleteUser.message || "User deleted successfully")
-        refetch() // Refetch users after deletion
-      } catch (err) {
-        toast.error("Failed to delete user")
+        const deleteUser = await userApi.deleteUser({
+          userId: userToDelete?.id,
+        });
+        toast.success(deleteUser.message || "User deleted successfully");
+        refetch(); // Refetch users after
+      } catch (err:any) {
+        toast.error( err.response.data.message || "Failed to delete user");
       } finally {
-        setDeleteModalOpen(false)
-        setUserToDelete(null)
+        setDeleteModalOpen(false);
+        setUserToDelete(null);
       }
     }
-  }
+  };
 
   return (
     <>
@@ -84,9 +109,9 @@ export function UserTable({ users, selectedUsers, setSelectedUsers, handleEditUs
                 checked={selectedUsers?.length === users?.length}
                 onCheckedChange={(checked) => {
                   if (checked) {
-                    setSelectedUsers(users?.map((user) => user.id))
+                    setSelectedUsers(users?.map((user: any) => user.id));
                   } else {
-                    setSelectedUsers([])
+                    setSelectedUsers([]);
                   }
                 }}
               />
@@ -103,16 +128,18 @@ export function UserTable({ users, selectedUsers, setSelectedUsers, handleEditUs
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users?.map((user) => (
+          {users?.map((user: any) => (
             <TableRow key={user.id}>
               <TableCell>
                 <Checkbox
                   checked={selectedUsers.includes(user.id)}
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setSelectedUsers((prev: string[]) => [...prev, user.id])
+                      setSelectedUsers((prev: string[]) => [...prev, user.id]);
                     } else {
-                      setSelectedUsers((prev: string[]) => prev.filter((id) => id !== user.id))
+                      setSelectedUsers((prev: string[]) =>
+                        prev.filter((id) => id !== user.id)
+                      );
                     }
                   }}
                 />
@@ -146,7 +173,9 @@ export function UserTable({ users, selectedUsers, setSelectedUsers, handleEditUs
                 </div>
               </TableCell>
               <TableCell>{getStatusBadge(user.coursesStatus)}</TableCell>
-              <TableCell className="text-sm text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+              <TableCell className="text-sm text-gray-600">
+                {new Date(user.createdAt).toLocaleDateString()}
+              </TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -159,11 +188,16 @@ export function UserTable({ users, selectedUsers, setSelectedUsers, handleEditUs
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </DropdownMenuItem> */}
-                    <DropdownMenuItem onClick={() => handleEditUser && handleEditUser(user)}>
+                    <DropdownMenuItem
+                      onClick={() => handleEditUser && handleEditUser(user)}
+                    >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit User
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteClick(user)}>
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => handleDeleteClick(user)}
+                    >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete User
                     </DropdownMenuItem>
@@ -179,7 +213,10 @@ export function UserTable({ users, selectedUsers, setSelectedUsers, handleEditUs
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
           </DialogHeader>
-          <p>Are you sure you want to delete {userToDelete?.first_name} {userToDelete?.last_name}?</p>
+          <p>
+            Are you sure you want to delete {userToDelete?.first_name}{" "}
+            {userToDelete?.last_name}?
+          </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
               Cancel
@@ -191,5 +228,5 @@ export function UserTable({ users, selectedUsers, setSelectedUsers, handleEditUs
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

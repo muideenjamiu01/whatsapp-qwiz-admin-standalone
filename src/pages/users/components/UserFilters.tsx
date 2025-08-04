@@ -1,5 +1,5 @@
 // components/user-management/UserFilters.tsx
-import { Search, Users, UserCheck, UserX, Trash2 } from "lucide-react";
+import { Search, UserCheck, UserX, Trash2, X } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import {
   Select,
@@ -45,8 +45,21 @@ export function UserFilters({
   uniqueFunctions,
   functionFilter,
   setFunctionFilter,
-  uniqueStatus
+  uniqueStatus,
 }: UserFiltersProps) {
+  const hasActiveFilters =
+    searchTerm ||
+    statusFilter !== "all" ||
+    opcoFilter !== "all" ||
+    functionFilter !== "all";
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("");
+    setOpcoFilter("");
+    setFunctionFilter("");
+  };
+
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center space-x-4">
@@ -63,7 +76,7 @@ export function UserFilters({
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Select Status" />
           </SelectTrigger>
-         <SelectContent>
+          <SelectContent>
             <SelectItem value="Active">Active </SelectItem>
             {uniqueStatus?.map((opco) => (
               <SelectItem key={opco} value={opco}>
@@ -74,7 +87,7 @@ export function UserFilters({
         </Select>
         <Select value={opcoFilter} onValueChange={setOpcoFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Select OPCO"/>
+            <SelectValue placeholder="Select OPCO" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All OPCO</SelectItem>
@@ -87,7 +100,7 @@ export function UserFilters({
         </Select>
         <Select value={functionFilter} onValueChange={setFunctionFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Select Function"/>
+            <SelectValue placeholder="Select Function" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All </SelectItem>
@@ -99,6 +112,17 @@ export function UserFilters({
           </SelectContent>
         </Select>
       </div>
+      {hasActiveFilters && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleClearFilters}
+          className="text-gray-600 hover:text-gray-800"
+        >
+          <X className="w-4 h-4 mr-2" />
+          Clear Filters
+        </Button>
+      )}
 
       {selectedUsers.length > 0 && (
         <div className="flex items-center space-x-2">
