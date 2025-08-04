@@ -1,17 +1,26 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Plus, Users, Download, Upload } from "lucide-react";
+import { useState } from "react";
+import { Plus, Users, Upload } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { UserAnalyticsCards } from "./components/UserAnalyticsCards";
 import { UserFilters } from "./components/UserFilters";
 import { Card, CardContent } from "../../components/ui/card";
 import { UserTable } from "./components/UserTable";
 import { UserFormDialog } from "./components/UserFormDialog";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useBulkUploadUsers, userApi } from "../../hooks/useUsers";
 import { toast } from "sonner";
 import { coursesApi } from "../../hooks/useCourses";
+import { BulkUploadSheet } from "./components/BulkUploadSheet";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../../components/ui/pagination";
 
 interface User {
   id: string;
@@ -29,75 +38,7 @@ interface User {
   unit?: string;
 }
 
-const mockUsers: User[] = [
-  {
-    id: "user-001",
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@accessholdings.com",
-    phoneNumber: "+234-801-234-5678",
-    staffId: "AGX1234",
-    grade: "AVP",
-    opco: "Access Nigeria",
-    gender: "Male",
-    function: "Technology",
-    unit: "Engineering",
-    status: "active",
-    enrolledCourses: 3,
-    completedCourses: 2,
-    lastActive: "2 hours ago",
-    createdAt: "2024-01-15",
-    courseId: "123",
-  },
-  {
-    id: "user-002",
-    firstName: "Jane",
-    lastName: "Smith",
-    email: "jane.smith@accessholdings.com",
-    phoneNumber: "+233-20-123-4567",
-    staffId: "AGX5678",
-    grade: "VP",
-    opco: "Access Ghana",
-    gender: "Female",
-    function: "Operations",
-    unit: "Customer Service",
-    status: "active",
-    enrolledCourses: 2,
-    completedCourses: 2,
-    lastActive: "1 day ago",
-    createdAt: "2024-01-10",
-    courseId: "456",
-  },
-  {
-    id: "user-003",
-    firstName: "Michael",
-    lastName: "Johnson",
-    email: "michael.johnson@accessholdings.com",
-    phoneNumber: "+254-70-123-4567",
-    staffId: "AGX9012",
-    grade: "Manager",
-    opco: "Access Kenya",
-    gender: "Male",
-    function: "Risk Management",
-    unit: "Credit Risk",
-    status: "pending",
-    enrolledCourses: 1,
-    completedCourses: 0,
-    lastActive: "3 hours ago",
-    createdAt: "2024-01-12",
-    courseId: "789",
-  },
-];
-
-const analyticsData = {
-  totalUsers: 156,
-  activeUsers: 134,
-  pendingUsers: 12,
-  inactiveUsers: 10,
-};
-
 export default function UserManagementPage() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { mutate: bulkUploadUsers } = useBulkUploadUsers();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -108,6 +49,7 @@ export default function UserManagementPage() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [functionFilter, setFunctionFilter] = useState("");
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [userForm, setUserForm] = useState({
     firstName: "",
     lastName: "",
@@ -122,6 +64,7 @@ export default function UserManagementPage() {
     courseId: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+console.log(setPageSize)
 
   const {
     data,
@@ -160,21 +103,18 @@ export default function UserManagementPage() {
     staleTime: 1000 * 60 * 60,
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // You might want to pass course_id dynamically instead
-    const courseId = "123";
+  const handleBulkUpload = (file: File) => {
+    const courseId = "bf87530a-e41d-48e4-836f-2fb56762a2d1"; // use actual courseId if applicable
 
     bulkUploadUsers(
       { file, courseId },
       {
         onSuccess: () => {
-          toast.success("Upload successful");
+          toast.success("Bulk upload successful");
+          setIsBulkUploadOpen(false);
         },
         onError: () => {
-          toast.error("Upload failed");
+          toast.error("Failed to upload CSV");
         },
       }
     );
@@ -284,142 +224,206 @@ export default function UserManagementPage() {
     setIsAddUserOpen(true);
   };
 
-  const handleBulkAction = (action: string) => {
-    switch (action) {
-      case "activate":
-        setUsers((prev) =>
-          prev.map((user) =>
-            selectedUsers.includes(user.id)
-              ? { ...user, status: "active" as const }
-              : user
-          )
-        );
-        break;
-      case "deactivate":
-        setUsers((prev) =>
-          prev.map((user) =>
-            selectedUsers.includes(user.id)
-              ? { ...user, status: "inactive" as const }
-              : user
-          )
-        );
-        break;
-      case "delete":
-        setUsers((prev) =>
-          prev.filter((user) => !selectedUsers.includes(user.id))
-        );
-        break;
+  const handleBulkAction = () => {
+    // switch (action) {
+    //   case "activate":
+    //     setUsers((prev:any) =>
+    //       prev.map((user:any) =>
+    //         selectedUsers.includes(user.id)
+    //           ? { ...user, status: "active" as const }
+    //           : user
+    //       )
+    //     );
+    //     break;
+    //   case "deactivate":
+    //     setUsers((prev) =>
+    //       prev.map((user) =>
+    //         selectedUsers.includes(user.id)
+    //           ? { ...user, status: "inactive" as const }
+    //           : user
+    //       )
+    //     );
+    //     break;
+    //   case "delete":
+    //     setUsers((prev) =>
+    //       prev.filter((user) => !selectedUsers.includes(user.id))
+    //     );
+    //     break;
+    // }
+    // setSelectedUsers([]);
+  };
+
+  const handlePreviousPage = () => {
+    if (pageNumber > 1) {
+      setPageNumber(pageNumber - 1);
     }
-    setSelectedUsers([]);
+  };
+
+  const handleNextPage = () => {
+    if (pageNumber < data?.data?.meta.totalPages) {
+      setPageNumber(pageNumber + 1);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              User Management
-            </h1>
-            <p className="text-gray-600">
-              Manage course participants and their access
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <label className="relative cursor-pointer">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xlsx"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                // disabled={isLoading}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Bulk Upload
-              </Button>
-            </label>
+    <>
+      {isLoadingUsers ? (
+        <div className="flex justify-center items-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#005F6A]"></div>
+        </div>
+      ) : (
+        <div className="min-h-screen bg-gray-50">
+          {/* Header */}
+          <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  User Management
+                </h1>
+                <p className="text-gray-600">
+                  Manage course participants and their access
+                </p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <label className="relative cursor-pointer">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsBulkUploadOpen(true)}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Bulk Upload
+                  </Button>
+                </label>
 
-            {/* <Button variant="outline" size="sm">
+                {/* <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
               Export Users
             </Button> */}
-            <Button onClick={handleAddUser}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add User
-            </Button>
+                <Button
+                  onClick={handleAddUser}
+                  className="bg-[#005F6A] hover:bg-[#004954] text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add User
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="px-6 py-6">
-        <UserAnalyticsCards data={data?.data?.statistics} />
+          <div className="px-6 py-6">
+            <UserAnalyticsCards data={data?.data?.statistics} />
 
-        <UserFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          uniqueStatus={data?.data?.filters?.status}
-          opcoFilter={opcoFilter}
-          setOpcoFilter={setOpcoFilter}
-          selectedUsers={selectedUsers}
-          handleBulkAction={handleBulkAction}
-          uniqueOpcos={data?.data?.filters?.opcos}
-          uniqueFunctions={data?.data?.filters?.functions}
-          functionFilter={functionFilter}
-          setFunctionFilter={setFunctionFilter}
-        />
-
-        <Card>
-          <CardContent className="p-0">
-            <UserTable
-              users={data?.data?.users}
+            <UserFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              uniqueStatus={data?.data?.filters?.status}
+              opcoFilter={opcoFilter}
+              setOpcoFilter={setOpcoFilter}
               selectedUsers={selectedUsers}
-              setSelectedUsers={setSelectedUsers}
-              handleEditUser={handleEditUser}
-              refetch={refetch}
+              handleBulkAction={handleBulkAction}
+              uniqueOpcos={data?.data?.filters?.opcos}
+              uniqueFunctions={data?.data?.filters?.functions}
+              functionFilter={functionFilter}
+              setFunctionFilter={setFunctionFilter}
             />
-          </CardContent>
-        </Card>
 
-        {data?.data?.users?.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No users found
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm || statusFilter !== "all" || opcoFilter !== "all"
-                ? "Try adjusting your search or filter criteria"
-                : "Get started by adding your first user"}
-            </p>
-            {!searchTerm && statusFilter === "all" && opcoFilter === "all" && (
-              <Button onClick={handleAddUser}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add User
-              </Button>
+            <Card>
+              <CardContent className="p-0">
+                <UserTable
+                  users={data?.data?.users}
+                  selectedUsers={selectedUsers}
+                  setSelectedUsers={setSelectedUsers}
+                  handleEditUser={handleEditUser}
+                  refetch={refetch}
+                />
+              </CardContent>
+              {/* Pagination */}
+              {data?.meta?.totalResults > 0 &&
+                data?.meta?.totalResults > 10 && (
+                  <div className="mt-6">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={handlePreviousPage}
+                            size={"sm"}
+                            className={pageNumber === 1 ? "disabled" : ""}
+                          />
+                        </PaginationItem>
+                        {Array.from(
+                          { length: data?.meta.totalPages },
+                          (_, i) => i + 1
+                        ).map((page) => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              size={"sm"}
+                              isActive={page === pageNumber}
+                              onClick={() => setPageNumber(page)}
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={handleNextPage}
+                            className={
+                              pageNumber === data?.meta.totalPages
+                                ? "disabled"
+                                : ""
+                            }
+                            size={"sm"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+            </Card>
+
+            {data?.data?.users?.length === 0 && (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No users found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm || statusFilter !== "all" || opcoFilter !== "all"
+                    ? "Try adjusting your search or filter criteria"
+                    : "Get started by adding your first user"}
+                </p>
+                {!searchTerm &&
+                  statusFilter === "all" &&
+                  opcoFilter === "all" && (
+                    <Button onClick={handleAddUser}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add User
+                    </Button>
+                  )}
+              </div>
             )}
-          </div>
-        )}
 
-        <UserFormDialog
-          open={isAddUserOpen}
-          onOpenChange={setIsAddUserOpen}
-          editingUser={!!editingUser}
-          userForm={userForm}
-          setUserForm={setUserForm}
-          errors={errors}
-          handleSaveUser={handleSaveUser}
-          courses={courses?.data?.courses}
-        />
-      </div>
-    </div>
+            <UserFormDialog
+              open={isAddUserOpen}
+              onOpenChange={setIsAddUserOpen}
+              editingUser={!!editingUser}
+              userForm={userForm}
+              setUserForm={setUserForm}
+              errors={errors}
+              handleSaveUser={handleSaveUser}
+              courses={courses?.data?.courses}
+            />
+          </div>
+          <BulkUploadSheet
+            open={isBulkUploadOpen}
+            onOpenChange={setIsBulkUploadOpen}
+            onFileUpload={handleBulkUpload}
+          />
+        </div>
+      )}
+    </>
   );
 }

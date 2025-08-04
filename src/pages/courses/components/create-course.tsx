@@ -1,29 +1,68 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { ArrowLeft, Save, X } from "lucide-react"
-import { Button } from "../../../components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
-import { Label } from "../../../components/ui/label"
-import { Input } from "../../../components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
-import { Textarea } from "../../../components/ui/textarea"
-import { Switch } from "../../../components/ui/switch"
-
+import { useEffect, useState } from "react";
+import { ArrowLeft, Save, X } from "lucide-react";
+import { Button } from "../../../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
+import { Label } from "../../../components/ui/label";
+import { Input } from "../../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
+import { Textarea } from "../../../components/ui/textarea";
+import { Switch } from "../../../components/ui/switch";
+import { useNavigate } from "react-router";
+import { coursesApi } from "../../../hooks/useCourses";
+import { toast } from "sonner";
 
 interface CreateCourseProps {
-  onBack: () => void
-  onSave: (courseData: any) => void
+  refetch?: () => void;
+  courseToEdit?: Course | any;
+  onSave?: (courseData: any) => void;
+}
+interface Course {
+  id?: string;
+  title: string;
+  description: string;
+  status: "Published" | "Draft" | "Archived";
+  joinCode: string;
+  category: string;
+  difficulty_level: string;
+  estimated_duration: string;
+  max_enrollments: number | null;
+  start_date: string | null;
+  end_date: string | null;
+
+  allow_self_enrollment?: boolean;
+  require_approval?: boolean;
+  auto_generate_code?: boolean;
+  join_code?: string;
 }
 
-export default function CreateCourse({ onBack, onSave }: CreateCourseProps) {
+export default function CreateCourse({
+  refetch,
+  courseToEdit,
+  onSave,
+}: CreateCourseProps) {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     joinCode: "",
-    status: "draft",
+    status: "Published",
     autoGenerateCode: true,
     allowSelfEnrollment: false,
     requireApproval: false,
@@ -33,62 +72,125 @@ export default function CreateCourse({ onBack, onSave }: CreateCourseProps) {
     estimatedDuration: "",
     difficulty: "beginner",
     category: "onboarding",
-  })
+  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Initialize form with course data when in edit mode
+  useEffect(() => {
+    if (courseToEdit) {
+      setFormData({
+        title: courseToEdit.title || "",
+        description: courseToEdit.description || "",
+        status: courseToEdit.status || "Published",
+        autoGenerateCode: courseToEdit?.auto_generate_code || true,
+        allowSelfEnrollment: courseToEdit.allow_self_enrollment || false,
+        requireApproval: courseToEdit.require_approval || false,
+        maxEnrollments: courseToEdit.max_enrollments?.toString() || "",
+        startDate: courseToEdit.start_date?.split("T")[0] || "",
+        endDate: courseToEdit.end_date?.split("T")[0] || "",
+        estimatedDuration: courseToEdit.estimated_duration || "",
+        difficulty: courseToEdit.difficulty_level || "beginner",
+        category: courseToEdit.category || "onboarding",
+        joinCode: courseToEdit.join_code,
+      });
+    }
+    // navigate("/courses/update/" + courseToEdit?.id);
+  }, [courseToEdit]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
+    }));
 
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
-      }))
+      }));
     }
-  }
+  };
 
   const generateJoinCode = () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-    setFormData((prev) => ({ ...prev, joinCode: code }))
-  }
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setFormData((prev) => ({ ...prev, joinCode: code }));
+  };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = "Course title is required"
+      newErrors.title = "Course title is required";
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = "Course description is required"
+      newErrors.description = "Course description is required";
     }
 
     if (!formData.joinCode.trim()) {
-      newErrors.joinCode = "Join code is required"
+      newErrors.joinCode = "Join code is required";
     } else if (formData.joinCode.length < 4) {
-      newErrors.joinCode = "Join code must be at least 4 characters"
+      newErrors.joinCode = "Join code must be at least 4 characters";
     }
 
-    if (formData.maxEnrollments && Number.parseInt(formData.maxEnrollments) < 1) {
-      newErrors.maxEnrollments = "Max enrollments must be greater than 0"
+    if (
+      formData.maxEnrollments &&
+      Number.parseInt(formData.maxEnrollments) < 1
+    ) {
+      newErrors.maxEnrollments = "Max enrollments must be greater than 0";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+ 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-    if (validateForm()) {
-      onSave(formData)
+    const payload = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      difficulty_level: formData.difficulty,
+      estimated_duration: formData.estimatedDuration,
+      status: formData.status,
+      allowSelfEnrollment: formData.allowSelfEnrollment,
+      requireApproval: formData.requireApproval,
+      max_enrollments: formData.maxEnrollments,
+      start_date: formData.startDate || null,
+      end_date: formData.endDate || null,
+      autoGenerateCode: formData.autoGenerateCode,
+      require_approval: formData.requireApproval,
+      join_code: courseToEdit?.id
+        ? courseToEdit.join_code
+        : formData.autoGenerateCode,
+    };
+
+    try {
+      let response;
+      if (courseToEdit?.id) {
+        //  Call update API
+        response = await coursesApi.updateCourse({
+          courseId: courseToEdit.id,
+          payload,
+        });
+        toast.success(response.message || "Course updated successfully");
+      } else {
+        //  Call create API
+        response = await coursesApi.createCourse(payload);
+        toast.success(response.message || "Course created successfully");
+      }
+      if (refetch) refetch();
+      if (onSave) onSave(response.data);
+
+      navigate("/courses");
+    } catch (error: any) {
+      toast.error(error.response.data.message || "Failed to save course");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -96,23 +198,33 @@ export default function CreateCourse({ onBack, onSave }: CreateCourseProps) {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={onBack}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/courses")}
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Courses
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Create New Course</h1>
-              <p className="text-gray-600">Set up a new WhatsApp-based training course</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {courseToEdit ? "Edit Course" : "Create New Course"}
+              </h1>
+              <p className="text-gray-600">
+                {courseToEdit
+                  ? "Update your WhatsApp-based training course"
+                  : "Set up a new WhatsApp-based training course"}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" onClick={onBack}>
+            <Button variant="outline" onClick={() => navigate(-1)}>
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>
             <Button onClick={handleSubmit}>
               <Save className="w-4 h-4 mr-2" />
-              Create Course
+              {courseToEdit ? "Update Course" : "Create Course"}
             </Button>
           </div>
         </div>
@@ -124,7 +236,9 @@ export default function CreateCourse({ onBack, onSave }: CreateCourseProps) {
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Provide the essential details for your course</CardDescription>
+              <CardDescription>
+                Provide the essential details for your course
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -137,25 +251,33 @@ export default function CreateCourse({ onBack, onSave }: CreateCourseProps) {
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     className={errors.title ? "border-red-500" : ""}
                   />
-                  {errors.title && <p className="text-sm text-red-600">{errors.title}</p>}
+                  {errors.title && (
+                    <p className="text-sm text-red-600">{errors.title}</p>
+                  )}
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="onboarding">Onboarding</SelectItem>
-                      <SelectItem value="compliance">Compliance</SelectItem>
-                      <SelectItem value="leadership">Leadership</SelectItem>
-                      <SelectItem value="technical">Technical</SelectItem>
-                      <SelectItem value="soft-skills">Soft Skills</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {!courseToEdit && (
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) =>
+                        handleInputChange("category", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="onboarding">Onboarding</SelectItem>
+                        <SelectItem value="compliance">Compliance</SelectItem>
+                        <SelectItem value="leadership">Leadership</SelectItem>
+                        <SelectItem value="technical">Technical</SelectItem>
+                        <SelectItem value="soft-skills">Soft Skills</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -164,198 +286,262 @@ export default function CreateCourse({ onBack, onSave }: CreateCourseProps) {
                   id="description"
                   placeholder="Describe what this course covers and its objectives..."
                   value={formData.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
                   rows={4}
                   className={errors.description ? "border-red-500" : ""}
                 />
-                {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
+                {errors.description && (
+                  <p className="text-sm text-red-600">{errors.description}</p>
+                )}
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="difficulty">Difficulty Level</Label>
-                  <Select value={formData.difficulty} onValueChange={(value) => handleInputChange("difficulty", value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedDuration">Estimated Duration</Label>
-                  <Input
-                    id="estimatedDuration"
-                    placeholder="e.g., 30 minutes"
-                    value={formData.estimatedDuration}
-                    onChange={(e) => handleInputChange("estimatedDuration", e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Access Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Access Settings</CardTitle>
-              <CardDescription>Configure how users can access this course</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="joinCode">Join Code *</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="joinCode"
-                      placeholder="e.g., AGX2024"
-                      value={formData.joinCode}
-                      onChange={(e) => handleInputChange("joinCode", e.target.value.toUpperCase())}
-                      className={errors.joinCode ? "border-red-500" : ""}
-                      disabled={formData.autoGenerateCode}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={generateJoinCode}
-                      disabled={formData.autoGenerateCode}
-                    >
-                      Generate
-                    </Button>
-                  </div>
-                  {errors.joinCode && <p className="text-sm text-red-600">{errors.joinCode}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="maxEnrollments">Max Enrollments</Label>
-                  <Input
-                    id="maxEnrollments"
-                    type="number"
-                    placeholder="Leave empty for unlimited"
-                    value={formData.maxEnrollments}
-                    onChange={(e) => handleInputChange("maxEnrollments", e.target.value)}
-                    className={errors.maxEnrollments ? "border-red-500" : ""}
-                  />
-                  {errors.maxEnrollments && <p className="text-sm text-red-600">{errors.maxEnrollments}</p>}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Auto-generate Join Code</Label>
-                    <p className="text-sm text-gray-600">Automatically generate a unique join code</p>
-                  </div>
-                  <Switch
-                    checked={formData.autoGenerateCode}
-                    onCheckedChange={(checked) => {
-                      handleInputChange("autoGenerateCode", checked)
-                      if (checked) {
-                        generateJoinCode()
+              {!courseToEdit && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="difficulty">Difficulty Level</Label>
+                    <Select
+                      value={formData.difficulty}
+                      onValueChange={(value) =>
+                        handleInputChange("difficulty", value)
                       }
-                    }}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Allow Self-Enrollment</Label>
-                    <p className="text-sm text-gray-600">Users can join using the join code without approval</p>
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">
+                          Intermediate
+                        </SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Switch
-                    checked={formData.allowSelfEnrollment}
-                    onCheckedChange={(checked) => handleInputChange("allowSelfEnrollment", checked)}
-                  />
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Require Approval</Label>
-                    <p className="text-sm text-gray-600">Admin approval required before users can start the course</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="estimatedDuration">
+                      Estimated Duration
+                    </Label>
+                    <Input
+                      id="estimatedDuration"
+                      placeholder="e.g., 30 minutes"
+                      value={formData.estimatedDuration}
+                      onChange={(e) =>
+                        handleInputChange("estimatedDuration", e.target.value)
+                      }
+                    />
                   </div>
-                  <Switch
-                    checked={formData.requireApproval}
-                    onCheckedChange={(checked) => handleInputChange("requireApproval", checked)}
-                  />
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
+          {!courseToEdit && (
+            <div>
+              {/* Access Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Access Settings</CardTitle>
+                  <CardDescription>
+                    Configure how users can access this course
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="joinCode">Join Code *</Label>
+                      <div className="flex space-x-2">
+                        <Input
+                          id="joinCode"
+                          placeholder="e.g., AGX2024"
+                          value={formData.joinCode}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "joinCode",
+                              e.target.value.toUpperCase()
+                            )
+                          }
+                          className={errors.joinCode ? "border-red-500" : ""}
+                          disabled={formData.autoGenerateCode}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={generateJoinCode}
+                          disabled={formData.autoGenerateCode}
+                        >
+                          Generate
+                        </Button>
+                      </div>
+                      {errors.joinCode && (
+                        <p className="text-sm text-red-600">
+                          {errors.joinCode}
+                        </p>
+                      )}
+                    </div>
 
-          {/* Schedule */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule</CardTitle>
-              <CardDescription>Set availability dates for the course (optional)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => handleInputChange("startDate", e.target.value)}
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="maxEnrollments">Max Enrollments</Label>
+                      <Input
+                        id="maxEnrollments"
+                        type="number"
+                        placeholder="Leave empty for unlimited"
+                        value={formData.maxEnrollments}
+                        onChange={(e) =>
+                          handleInputChange("maxEnrollments", e.target.value)
+                        }
+                        className={
+                          errors.maxEnrollments ? "border-red-500" : ""
+                        }
+                      />
+                      {errors.maxEnrollments && (
+                        <p className="text-sm text-red-600">
+                          {errors.maxEnrollments}
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => handleInputChange("endDate", e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>Auto-generate Join Code</Label>
+                        <p className="text-sm text-gray-600">
+                          Automatically generate a unique join code
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.autoGenerateCode}
+                        onCheckedChange={(checked) => {
+                          handleInputChange("autoGenerateCode", checked);
+                          if (checked) {
+                            generateJoinCode();
+                          }
+                        }}
+                      />
+                    </div>
 
-          {/* Course Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Publication Status</CardTitle>
-              <CardDescription>Choose the initial status for your course</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-gray-600">
-                  {formData.status === "draft"
-                    ? "Course will be saved as draft and not visible to users"
-                    : "Course will be immediately available to users"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>Allow Self-Enrollment</Label>
+                        <p className="text-sm text-gray-600">
+                          Users can join using the join code without approval
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.allowSelfEnrollment}
+                        onCheckedChange={(checked) =>
+                          handleInputChange("allowSelfEnrollment", checked)
+                        }
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>Require Approval</Label>
+                        <p className="text-sm text-gray-600">
+                          Admin approval required before users can start the
+                          course
+                        </p>
+                      </div>
+                      <Switch
+                        checked={formData.requireApproval}
+                        onCheckedChange={(checked) =>
+                          handleInputChange("requireApproval", checked)
+                        }
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* Schedule */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Schedule</CardTitle>
+                  <CardDescription>
+                    Set availability dates for the course (optional)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="startDate">Start Date</Label>
+                      <Input
+                        id="startDate"
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) =>
+                          handleInputChange("startDate", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="endDate">End Date</Label>
+                      <Input
+                        id="endDate"
+                        type="date"
+                        value={formData.endDate}
+                        onChange={(e) =>
+                          handleInputChange("endDate", e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* Course Status */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Publication Status</CardTitle>
+                  <CardDescription>
+                    Choose the initial status for your course
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) =>
+                        handleInputChange("status", value)
+                      }
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                        <SelectItem value="Published">Published</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-gray-600">
+                      {formData.status === "draft"
+                        ? "Course will be saved as draft and not visible to users"
+                        : "Course will be immediately available to users"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* Form Actions */}
           <div className="flex justify-end space-x-4 pt-6 border-t">
-            <Button type="button" variant="outline" onClick={onBack}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/courses")}
+            >
               Cancel
             </Button>
             <Button type="submit">
               <Save className="w-4 h-4 mr-2" />
-              Create Course
+              {courseToEdit ? "Update Course" : "Create Course"}
             </Button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }

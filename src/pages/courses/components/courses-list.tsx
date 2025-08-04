@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Plus,
   Search,
@@ -12,143 +12,230 @@ import {
   Eye,
   Edit,
   Trash2,
-  Copy,
-  Download,
-} from "lucide-react"
-import { Button } from "../../../components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
-import { Badge } from "../../../components/ui/badge"
-import { Input } from "../../../components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../../components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
-import { Progress } from "../../../components/ui/progress"
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../../components/ui/dialog";
+import { Button } from "../../../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
+import { Badge } from "../../../components/ui/badge";
+import { Input } from "../../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../../components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../../../components/ui/pagination";
+import { toast } from "sonner";
+import { coursesApi } from "../../../hooks/useCourses";
+import CreateCourse from "./create-course";
+
 
 interface Course {
-  id: string
-  title: string
-  description: string
-  status: "active" | "draft" | "archived"
-  joinCode: string
-  modules: number
-  sections: number
-  enrolledUsers: number
-  completedUsers: number
-  completionRate: number
-  createdAt: string
-  lastUpdated: string
-  averageTime: string
+  id: string;
+  title: string;
+  description: string;
+  status: "Published" | "Draft" | "Archived";
+  join_code: string;
+  category: string;
+  difficulty_level: string;
+  estimated_duration: string;
+  max_enrollments: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const mockCourses: Course[] = [
-  {
-    id: "course-001",
-    title: "Access Group Onboarding Experience",
-    description: "Comprehensive WhatsApp-based onboarding for Access Holdings staff",
-    status: "active",
-    joinCode: "AGX2024",
-    modules: 2,
-    sections: 7,
-    enrolledUsers: 156,
-    completedUsers: 122,
-    completionRate: 78.2,
-    createdAt: "2024-01-15",
-    lastUpdated: "2024-01-16",
-    averageTime: "20m",
-  },
-  {
-    id: "course-002",
-    title: "Leadership Development Program",
-    description: "Advanced leadership training for senior staff members",
-    status: "active",
-    joinCode: "LDP2024",
-    modules: 3,
-    sections: 12,
-    enrolledUsers: 45,
-    completedUsers: 32,
-    completionRate: 71.1,
-    createdAt: "2024-01-10",
-    lastUpdated: "2024-01-14",
-    averageTime: "45m",
-  },
-  {
-    id: "course-003",
-    title: "Digital Banking Fundamentals",
-    description: "Introduction to digital banking concepts and practices",
-    status: "draft",
-    joinCode: "DBF2024",
-    modules: 4,
-    sections: 16,
-    enrolledUsers: 0,
-    completedUsers: 0,
-    completionRate: 0,
-    createdAt: "2024-01-12",
-    lastUpdated: "2024-01-13",
-    averageTime: "0m",
-  },
-  {
-    id: "course-004",
-    title: "Compliance Training 2023",
-    description: "Annual compliance and regulatory training",
-    status: "archived",
-    joinCode: "CT2023",
-    modules: 2,
-    sections: 8,
-    enrolledUsers: 234,
-    completedUsers: 234,
-    completionRate: 100,
-    createdAt: "2023-12-01",
-    lastUpdated: "2023-12-31",
-    averageTime: "30m",
-  },
-]
+interface Statistics {
+  completionRate?: string;
+  totalCompletions: string;
+  monthlyGrowth: number;
+  totalCourses: number;
+  activeCourses: number;
+  totalUsers?: number;
+  testListers: number;
+}
 
-const analyticsData = {
-  totalCourses: 4,
-  activeCourses: 2,
-  totalUsers: 435,
-  averageCompletion: 82.3,
-  monthlyGrowth: 15.2,
-  totalCompletions: 388,
+interface Meta {
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  totalResults: number;
+}
+
+interface CoursesResponse {
+  data: {
+    courses: Course[];
+    statistics: Statistics;
+  };
+  meta: Meta;
 }
 
 interface CoursesListProps {
-  onCreateCourse: () => void
-  onViewCourse: (courseId: string) => void
-  onEditCourse: (courseId: string) => void
-  onManageSections: (courseId: string) => void
+  onCreateCourse: () => void;
+  onViewCourse: (courseId: string) => void;
+  onManageSections: (courseId: string) => void;
+  onManageModules: (courseId: string) => void;
+  onPageChange: (page: number) => void;
+  response: CoursesResponse;
+  refetch: () => void;
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+  pageNumber: number;
+  pageSize: number;
+  setPageNumber: (value: number) => void;
+  setPageSize: (value: number) => void;
+  statusFilter: string;
+  setStatusFilter: (value: string) => void;
 }
 
 export default function CoursesList({
   onCreateCourse,
   onViewCourse,
-  onEditCourse,
+  onManageModules,
   onManageSections,
+  onPageChange,
+  response,
+  refetch,
+  searchTerm,
+  setSearchTerm,
+  pageNumber,
+  pageSize,
+  setPageNumber,
+  setPageSize,
+  statusFilter,
+  setStatusFilter,
 }: CoursesListProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid")
+  // const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<null | Course>(null);
+  const [courseToDelete, setCourseToDelete] = useState<{
+    title: string;
+    id: string;
+  } | null>(null);
+
+  console.log(setPageNumber,setPageSize, pageNumber,
+  pageSize,)
+
+  const { data, meta } = response;
+  const { courses, statistics } = data;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "active":
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>
-      case "draft":
-        return <Badge className="bg-yellow-100 text-yellow-800">Draft</Badge>
-      case "archived":
-        return <Badge className="bg-gray-100 text-gray-800">Archived</Badge>
+      case "Published":
+        return <Badge className="bg-green-100 text-green-800">Published</Badge>;
+      case "Draft":
+        return <Badge className="bg-yellow-100 text-yellow-800">Draft</Badge>;
+      case "Archived":
+        return <Badge className="bg-gray-100 text-gray-800">Archived</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>;
     }
-  }
+  };
 
-  const filteredCourses = mockCourses.filter((course) => {
-    const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || course.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Not set";
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  const getDurationInMinutes = (duration: string) => {
+    if (!duration) return "0m";
+    return duration.includes("minutes")
+      ? duration.replace("minutes", "m")
+      : duration.includes("minute")
+      ? duration.replace("minute", "m")
+      : duration;
+  };
+
+  const handlePreviousPage = () => {
+    if (meta.pageNumber > 1) {
+      onPageChange(meta.pageNumber - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (meta.pageNumber < meta.totalPages) {
+      onPageChange(meta.pageNumber + 1);
+    }
+  };
+
+  const handleDeleteClick = (course: any) => {
+    setCourseToDelete(course);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (courseToDelete) {
+      try {
+        const deleteUser = await coursesApi.deleteCourse({
+          courseId: courseToDelete?.id,
+        });
+        toast.success(deleteUser.message || "Course deleted successfully");
+        refetch(); // Refetch users after deletion
+      } catch (err) {
+        toast.error("Failed to delete user");
+      } finally {
+        setDeleteModalOpen(false);
+        setCourseToDelete(null);
+      }
+    }
+  };
+
+  const handleEditCourse = (course: any) => {
+    setEditingCourse(course);
+    // navigate(`/courses/update/${course.id}`);
+    
+  };
+  const handleSaveSuccess = () => {
+    setEditingCourse(null);
+    refetch();
+  };
+
+  if (editingCourse) {
+    return (
+      <CreateCourse
+        courseToEdit={editingCourse}
+        onSave={handleSaveSuccess}
+        refetch={refetch}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -156,15 +243,19 @@ export default function CoursesList({
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Course Management</h1>
-            <p className="text-gray-600">Manage your WhatsApp-based training courses</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Course Management
+            </h1>
+            <p className="text-gray-600">
+              Manage your WhatsApp-based training courses
+            </p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
+            {/* <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
               Export Data
-            </Button>
-            <Button onClick={onCreateCourse}>
+            </Button> */}
+            <Button onClick={onCreateCourse} className="bg-[#005F6A] hover:bg-[#004954] text-white">
               <Plus className="w-4 h-4 mr-2" />
               Create Course
             </Button>
@@ -177,45 +268,68 @@ export default function CoursesList({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Courses
+              </CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.totalCourses}</div>
-              <p className="text-xs text-muted-foreground">{analyticsData.activeCourses} active courses</p>
+              <div className="text-2xl font-bold">
+                {statistics?.totalCourses}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {statistics?.activeCourses} active courses
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Test Listers
+              </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">+{analyticsData.monthlyGrowth}% from last month</p>
+              <div className="text-2xl font-bold">
+                {statistics?.testListers}
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg. Completion</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Avg. Completion
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.averageCompletion}%</div>
-              <p className="text-xs text-muted-foreground">{analyticsData.totalCompletions} total completions</p>
+              <div className="text-2xl font-bold">
+                {statistics?.completionRate
+                  ? `${parseFloat(statistics?.completionRate).toFixed(2)}%`
+                  : "0%"}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {statistics?.totalCompletions} total completions
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Growth</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Monthly Growth
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+{analyticsData.monthlyGrowth}%</div>
-              <p className="text-xs text-muted-foreground">User enrollment growth</p>
+              <div className="text-2xl font-bold">
+                +{statistics?.monthlyGrowth}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                User enrollment growth
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -228,24 +342,26 @@ export default function CoursesList({
               <Input
                 placeholder="Search courses..."
                 value={searchTerm}
-                onChange={(e:any) => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-64"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
-                <SelectValue />
+                <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
+                <SelectItem value="Published">Published</SelectItem>
+                <SelectItem value="Draft">Draft</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant={viewMode === "grid" ? "default" : "outline"} size="sm" onClick={() => setViewMode("grid")}>
+            <Button
+              variant={viewMode === "grid" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+            >
               Grid
             </Button>
             <Button
@@ -258,16 +374,22 @@ export default function CoursesList({
           </div>
         </div>
 
+        {/* You can reuse your grid and table rendering code here using `courses` */}
         {/* Course Grid View */}
         {viewMode === "grid" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => (
-              <Card key={course.id} className="hover:shadow-lg transition-shadow">
+            {courses?.map((course: any) => (
+              <Card
+                key={course.id}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <CardTitle className="text-lg">{course.title}</CardTitle>
-                      <CardDescription className="mt-1">{course.description}</CardDescription>
+                      <CardDescription className="mt-1">
+                        {course.description}
+                      </CardDescription>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -276,23 +398,35 @@ export default function CoursesList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => onViewCourse(course.id)}>
+                        <DropdownMenuItem
+                          onClick={() => onViewCourse(course.id)}
+                        >
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEditCourse(course.id)}>
+                        <DropdownMenuItem
+                          onClick={() => handleEditCourse(course)}
+                        >
                           <Edit className="w-4 h-4 mr-2" />
                           Edit Course
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onManageSections(course.id)}>
+                        <DropdownMenuItem
+                          onClick={() => onManageSections(course.id)}
+                        >
                           <BookOpen className="w-4 h-4 mr-2" />
                           Manage Sections
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Copy className="w-4 h-4 mr-2" />
-                          Duplicate
+                        <DropdownMenuItem
+                          onClick={() => onManageModules(course.id)}
+                        >
+                          <BookOpen className="w-4 h-4 mr-2" />
+                          Manage Modules
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
+
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => handleDeleteClick(course)}
+                        >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
@@ -301,46 +435,54 @@ export default function CoursesList({
                   </div>
                   <div className="flex items-center justify-between mt-4">
                     {getStatusBadge(course.status)}
-                    <code className="bg-gray-100 px-2 py-1 rounded text-sm">{course.joinCode}</code>
+                    <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                      {course.join_code}
+                    </code>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="text-center">
-                      <div className="text-lg font-semibold">{course.modules}</div>
-                      <div className="text-sm text-gray-600">Modules</div>
+                      <div className="text-sm font-semibold">
+                        {course.category || "No category"}
+                      </div>
+                      <div className="text-sm text-gray-600">Category</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold">{course.sections}</div>
-                      <div className="text-sm text-gray-600">Sections</div>
+                      <div className="text-sm font-semibold">
+                        {course.difficulty_level || "Not set"}
+                      </div>
+                      <div className="text-sm text-gray-600">Level</div>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Progress</span>
-                      <span>{course.completionRate}%</span>
+                      <span>Duration</span>
+                      <span>
+                        {getDurationInMinutes(course.estimated_duration)}
+                      </span>
                     </div>
-                    <Progress value={course.completionRate} className="h-2" />
                     <div className="flex justify-between text-xs text-gray-600">
-                      <span>{course.completedUsers} completed</span>
-                      <span>{course.enrolledUsers} enrolled</span>
+                      <span>Starts: {formatDate(course.start_date)}</span>
+                      <span>Ends: {formatDate(course.end_date)}</span>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center mt-4 pt-4 border-t">
                     <div className="flex items-center text-sm text-gray-600">
                       <Clock className="w-4 h-4 mr-1" />
-                      {course.averageTime}
+                      Created {formatDate(course.createdAt)}
                     </div>
-                    <div className="text-sm text-gray-600">Updated {course.lastUpdated}</div>
+                    <div className="text-sm text-gray-600">
+                      Updated {formatDate(course.updatedAt)}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
-
         {/* Course Table View */}
         {viewMode === "table" && (
           <Card>
@@ -351,37 +493,42 @@ export default function CoursesList({
                     <TableHead>Course</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Join Code</TableHead>
-                    <TableHead>Modules</TableHead>
-                    <TableHead>Enrolled</TableHead>
-                    <TableHead>Completion</TableHead>
-                    <TableHead>Avg. Time</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>End Date</TableHead>
                     <TableHead>Last Updated</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCourses.map((course) => (
+                  {courses?.map((course) => (
                     <TableRow key={course.id}>
                       <TableCell>
                         <div>
                           <p className="font-medium">{course.title}</p>
-                          <p className="text-sm text-gray-600">{course.description}</p>
+                          <p className="text-sm text-gray-600">
+                            {course.description}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(course.status)}</TableCell>
                       <TableCell>
-                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">{course.joinCode}</code>
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                          {course.join_code}
+                        </code>
                       </TableCell>
-                      <TableCell>{course.modules}</TableCell>
-                      <TableCell>{course.enrolledUsers}</TableCell>
+                      <TableCell>{course.category || "-"}</TableCell>
+                      <TableCell>{course.difficulty_level || "-"}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Progress value={course.completionRate} className="w-16 h-2" />
-                          <span className="text-sm">{course.completionRate}%</span>
-                        </div>
+                        {getDurationInMinutes(course.estimated_duration)}
                       </TableCell>
-                      <TableCell>{course.averageTime}</TableCell>
-                      <TableCell className="text-sm text-gray-600">{course.lastUpdated}</TableCell>
+                      <TableCell>{formatDate(course.start_date)}</TableCell>
+                      <TableCell>{formatDate(course.end_date)}</TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {formatDate(course.updatedAt)}
+                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -390,23 +537,35 @@ export default function CoursesList({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => onViewCourse(course.id)}>
+                            <DropdownMenuItem
+                              onClick={() => onViewCourse(course.id)}
+                            >
                               <Eye className="w-4 h-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onEditCourse(course.id)}>
+                            <DropdownMenuItem
+                              onClick={() => handleEditCourse(course)}
+                            >
                               <Edit className="w-4 h-4 mr-2" />
                               Edit Course
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onManageSections(course.id)}>
+                            <DropdownMenuItem
+                              onClick={() => onManageSections(course.id)}
+                            >
                               <BookOpen className="w-4 h-4 mr-2" />
                               Manage Sections
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Copy className="w-4 h-4 mr-2" />
-                              Duplicate
+                            <DropdownMenuItem
+                              onClick={() => onManageModules(course.id)}
+                            >
+                              <BookOpen className="w-4 h-4 mr-2" />
+                              Manage Sections
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
+
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleDeleteClick(course)}
+                            >
                               <Trash2 className="w-4 h-4 mr-2" />
                               Delete
                             </DropdownMenuItem>
@@ -421,24 +580,61 @@ export default function CoursesList({
           </Card>
         )}
 
-        {filteredCourses.length === 0 && (
-          <div className="text-center py-12">
-            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No courses found</h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm || statusFilter !== "all"
-                ? "Try adjusting your search or filter criteria"
-                : "Get started by creating your first course"}
-            </p>
-            {!searchTerm && statusFilter === "all" && (
-              <Button onClick={onCreateCourse}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Course
-              </Button>
-            )}
+        {/* Pagination */}
+        {meta?.totalResults > 0 && (
+          <div className="mt-6">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    size="default"
+                    onClick={handlePreviousPage}
+                    // disabled={meta.pageNumber === 1}
+                  />
+                </PaginationItem>
+                {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        size="default"
+                        isActive={page === meta.pageNumber}
+                        onClick={() => onPageChange(page)}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+                <PaginationItem>
+                  <PaginationNext
+                    size="default"
+                    onClick={handleNextPage}
+                    className={
+                      meta.pageNumber === meta.totalPages ? "disabled" : ""
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
       </div>
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Course</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete {courseToDelete?.title} ?</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteUser}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  )
+  );
 }

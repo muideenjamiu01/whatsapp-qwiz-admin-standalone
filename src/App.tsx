@@ -10,6 +10,10 @@ import QuizAnalyticsPage from "./pages/analytics/Analytics"
 import Login from "./pages/auth/Login"
 import Courses from "./pages/courses/Courses"
 import UserManagement from "./pages/users/Users"
+import CreateCourse from "./pages/courses/components/create-course"
+import CourseDetails from "./pages/courses/components/course-details"
+import CourseSections from "./pages/courses/components/course-sections"
+import ModuleManagement from "./pages/courses/components/module-management"
 
 function App() {
   
@@ -17,16 +21,23 @@ function App() {
     <>
     <Layout>
 <>
+{/* <BrowserRouter> */}
     <Routes>
       <Route path="/" element={<Login/>}/>
       <Route path="/dashboard" element={<Dashboard/>}/>
       <Route path="/quizzes" element={<QuizzesPage/>}/>
       <Route path="/courses" element={<Courses/>}/>
+      <Route path="/courses/create" element={<CreateCourse />}/>
+      <Route path="/courses/update/:id" element={<CreateCourse />}/>
+      <Route path="/courses/:id/*" element={<CourseDetails />}/>
+      <Route path="/courses/:id/sections" element={<CourseSections />}/>
+      <Route path="/courses/:id/modules" element={<ModuleManagement/>}/>
       <Route path="/users" element={<UserManagement/>}/>
       <Route path="/quizzes/create" element={<CreateQuizPage/>}/>
       <Route path="/quizzes/:id/*" element={<QuizDetailsPage/>}/>
       <Route path="/analytics/:id/*" element={<QuizAnalyticsPage/>}/>
     </Routes>
+    {/* </BrowserRouter> */}
 </>
     </Layout>
 

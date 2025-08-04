@@ -1,6 +1,4 @@
-import { Home, ListChecks,School,Users } from "lucide-react";
-// import { usePathname } from "next/navigation"
-// import Link from "next/link"
+import { Home, ListChecks, School, Users, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,11 +12,11 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "./ui/sidebar";
-import { Link, useLocation } from "react-router";
-// import { ModeToggle } from "./mode-toggle"
+import { Link, useLocation, useNavigate } from "react-router";
 
 export function AppSidebar() {
   const pathname = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     {
@@ -41,22 +39,18 @@ export function AppSidebar() {
       icon: Users,
       href: "/users",
     },
-    // {
-    //   title: "Create Quiz",
-    //   icon: Plus,
-    //   href: "/quizzes/create",
-    // },
-    // {
-    //   title: "Analytics",
-    //   icon: BarChart3,
-    //   href: "/analytics",
-    // },
-    // {
-    //   title: "Settings",
-    //   icon: Settings,
-    //   href: "/settings",
-    // },
   ];
+
+  const handleLogout = () => {
+    // Clear session storage
+    sessionStorage.clear();
+    
+    // Clear local storage
+    localStorage.clear();
+    
+    // Navigate to login or home page
+    navigate("/");
+  };
 
   return (
     <Sidebar>
@@ -89,15 +83,28 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-full bg-primary" />
-            <div>
-              <p className="text-sm font-medium">Admin User</p>
-              <p className="text-xs text-muted-foreground">admin@qwizfun.com</p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 rounded-full bg-primary" />
+              <div>
+                <p className="text-sm font-medium">Admin User</p>
+                <p className="text-xs text-muted-foreground">admin@qwizfun.com</p>
+              </div>
             </div>
           </div>
-          {/* <ModeToggle /> */}
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={handleLogout}
+                tooltip="Logout"
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </div>
       </SidebarFooter>
       <SidebarRail />
