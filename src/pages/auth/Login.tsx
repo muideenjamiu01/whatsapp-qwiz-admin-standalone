@@ -23,7 +23,7 @@ const Login: React.FC = () => {
       onError(err) {
         // @ts-expect-error axios error
         toast.error(`Unable to login - ${err?.response?.data?.error}`);
-        console.log({ err });
+        console.warn({ err });
       },
       onSettled() {
         toast.dismiss();

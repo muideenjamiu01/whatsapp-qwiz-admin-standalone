@@ -165,7 +165,7 @@ export default function CourseSections() {
     estimatedTime: "",
   });
 
-  console.log(setPageNumber,setPageSize)
+  console.warn(setPageNumber,setPageSize)
 
   const {
     data: sectionsData,

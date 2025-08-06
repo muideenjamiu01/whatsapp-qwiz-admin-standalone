@@ -82,7 +82,7 @@ export default function QuizzesPage() {
 
   const handleDeleteConfirm = () => {
     // In a real app, you would delete the quiz here
-    console.log(`Deleting quiz ${quizToDelete}`);
+    console.warn(`Deleting quiz ${quizToDelete}`);
     setDeleteDialogOpen(false);
     setQuizToDelete(null);
   };

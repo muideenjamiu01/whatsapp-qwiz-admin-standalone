@@ -40,6 +40,8 @@ interface User {
 
 export default function UserManagementPage() {
   const { mutate: bulkUploadUsers } = useBulkUploadUsers();
+
+  const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [opcoFilter, setOpcoFilter] = useState("");
@@ -64,7 +66,7 @@ export default function UserManagementPage() {
     courseId: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-console.log(setPageSize)
+  console.warn(setPageSize);
 
   const {
     data,
@@ -103,22 +105,24 @@ console.log(setPageSize)
     staleTime: 1000 * 60 * 60,
   });
 
-  const handleBulkUpload = (file: File) => {
-    const courseId = "bf87530a-e41d-48e4-836f-2fb56762a2d1"; // use actual courseId if applicable
-
-    bulkUploadUsers(
-      { file, courseId },
-      {
-        onSuccess: () => {
-          toast.success("Bulk upload successful");
-          setIsBulkUploadOpen(false);
-        },
-        onError: () => {
-          toast.error("Failed to upload CSV");
-        },
-      }
-    );
-  };
+  const handleBulkUpload = (file: File, courseId: string) => {
+  setIsUploading(true);
+  
+  bulkUploadUsers(
+    { file, courseId },
+    {
+      onSuccess: () => {
+        toast.success("Bulk upload successful");
+        setIsBulkUploadOpen(false);
+        setIsUploading(false);
+      },
+      onError: () => {
+        toast.error("Failed to upload CSV");
+        setIsUploading(false);
+      },
+    }
+  );
+};
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -204,7 +208,7 @@ console.log(setPageSize)
   };
   const handleEditUser = (user: User) => {
     setEditingUser(user);
-    console.log(user, "user id");
+    console.warn(user, "user id");
 
     setUserForm({
       firstName: user.first_name,
@@ -421,6 +425,7 @@ console.log(setPageSize)
             open={isBulkUploadOpen}
             onOpenChange={setIsBulkUploadOpen}
             onFileUpload={handleBulkUpload}
+            isUploading={isUploading}
           />
         </div>
       )}

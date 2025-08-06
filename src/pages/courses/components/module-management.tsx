@@ -64,7 +64,7 @@ export default function ModuleManagement({  courseTitle }: any) {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
- console.log(setPageNumber,setPageSize)
+ console.warn(setPageNumber,setPageSize)
   
   const {
     data: modulesData,

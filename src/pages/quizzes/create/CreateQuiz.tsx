@@ -81,7 +81,7 @@ export default function CreateQuizPage() {
   };
 
   const onSubmit = (data: QuizDraft) => {
-    console.log("Form submitted:", data);
+    console.warn("Form submitted:", data);
     toast.loading(`Creating quiz... please wait`);
     createQuiz.mutate(
       {
@@ -115,7 +115,7 @@ export default function CreateQuizPage() {
 
   const saveAsDraft = () => {
     const data = form.getValues();
-    console.log("Saving as draft:", data);
+    console.warn("Saving as draft:", data);
     toast("Your quiz has been saved as a draft.");
   };
 

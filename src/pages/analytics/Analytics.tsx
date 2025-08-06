@@ -116,7 +116,7 @@ export default function QuizAnalyticsPage() {
 
   const handleExport = () => {
     // In a real app, this would generate and download a CSV/Excel file
-    console.log("Exporting data...");
+    console.warn("Exporting data...");
   };
 
   return (
