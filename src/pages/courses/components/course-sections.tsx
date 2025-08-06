@@ -53,7 +53,8 @@ import { coursesApi } from "../../../hooks/useCourses";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-
+import { set } from "react-hook-form";
+import { Textarea } from "../../../components/ui/textarea";
 
 interface Section {
   id: string;
@@ -164,8 +165,7 @@ export default function CourseSections() {
     module_id: "",
     estimatedTime: "",
   });
-
-  console.warn(setPageNumber,setPageSize)
+  console.log(id, "id");
 
   const {
     data: sectionsData,
@@ -175,13 +175,15 @@ export default function CourseSections() {
     queryKey: ["getOverviewCourses", pageNumber, pageSize, searchTerm],
     queryFn: () =>
       coursesApi.getAllModules({
-        course_id: id,
+        moduleId: id,
         pageNumber,
         pageSize,
         searchTerm,
       }),
     staleTime: 1000 * 60 * 60,
   });
+
+  console.warn(setPageNumber, setPageSize);
 
   const getMediaIcon = (media_type: string) => {
     switch (media_type) {
@@ -209,7 +211,7 @@ export default function CourseSections() {
 
   const handleAddSection = (module: any) => {
     setEditingSection(null);
-    setModuleId(module?.id || "");
+    setModuleId(module?.id);
     setSectionForm({
       title: "",
       description: "",
@@ -226,10 +228,10 @@ export default function CourseSections() {
     setEditingSection(section);
     setSectionForm({
       title: section.title,
-      description: section.description || "",
+      content: section.description|| "",
       media_type: section.media_type ?? "video", // Provide a default value if section.media_type is undefined
       media_url: section.media_url || "",
-      content: section.content || "",
+      // content: section.content || "",
       module_id: section.module_id,
       estimatedTime: section.estimatedTime,
     });
@@ -238,18 +240,20 @@ export default function CourseSections() {
 
   const computedOrder = editingSection
     ? editingSection.order
-    : (modules.find((m) => m.id === sectionForm.module_id)?.sections.length ||
-        0) + 1;
+    : (sectionsData?.data?.find((m: any) => m.id === sectionForm.module_id)
+        ?.sections?.length || 0) + 1;
 
   const handleSaveSection = async () => {
     const payload = {
       title: sectionForm.title,
+      content: sectionForm.description,
       order: computedOrder,
       media_type: sectionForm.media_type || "video",
       media_url: sectionForm.media_url,
-      module_id: moduleId,
+      module_id: sectionForm.module_id,
       estimated_duration: sectionForm.estimatedTime,
     };
+    console.log(moduleId, "moduleId");
 
     try {
       let response;
@@ -501,11 +505,11 @@ export default function CourseSections() {
                                               {section.media_type} •{" "}
                                               {section.estimated_duration}
                                             </p>
-                                            {/* {section.description && (
-                                          <p className="text-sm text-gray-500 mt-1">
-                                            {section.description}
-                                          </p>
-                                        )} */}
+                                            {section.content && (
+                                              <p className="text-sm text-gray-500 mt-1">
+                                                {section.content}
+                                              </p>
+                                            )}
                                           </div>
                                         </div>
                                         <div className="flex items-center space-x-4">
@@ -645,15 +649,31 @@ export default function CourseSections() {
                         </p>
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sectionDescription">Description</Label>
+                      <Textarea
+                        id="sectionDescription"
+                        placeholder="Brief description of this section..."
+                        value={sectionForm.description}
+                        onChange={(e) =>
+                          setSectionForm((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                          }))
+                        }
+                        rows={3}
+                      />
+                    </div>
                     {!editingSection && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 w-full">
                           <Label
                             htmlFor="moduleSelect"
                             className="text-sm font-medium"
                           >
-                            Module *
+                            Module <span className="text-red-500">*</span>
                           </Label>
+
                           <Select
                             value={sectionForm.module_id}
                             onValueChange={(value) =>
@@ -663,29 +683,36 @@ export default function CourseSections() {
                               }))
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select a module" />
                             </SelectTrigger>
+
                             <SelectContent>
-                              {modules.map((module) => (
+                              {sectionsData?.data?.map((module: any) => (
                                 <SelectItem key={module.id} value={module.id}>
-                                  <div className="flex items-center space-x-2">
-                                    <BookOpen className="w-4 h-4" />
-                                    <span>{module.title}</span>
-                                    <Badge variant="outline" className="ml-2">
-                                      {module.sections.length} sections
+                                  <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-2">
+                                      <BookOpen className="w-4 h-4 text-muted-foreground" />
+                                      <span className="truncate">
+                                        {module.title}
+                                      </span>
+                                    </div>
+                                    <Badge variant="outline">
+                                      {module?.CourseSections?.length ?? 0}{" "}
+                                      sections
                                     </Badge>
                                   </div>
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+
                           {sectionForm.module_id && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                               This section will be added to:{" "}
                               {
-                                modules.find(
-                                  (m) => m.id === sectionForm.module_id
+                                sectionsData?.data?.find(
+                                  (m: any) => m.id === sectionForm.module_id
                                 )?.title
                               }
                             </p>
@@ -912,9 +939,9 @@ export default function CourseSections() {
                             Section{" "}
                             {editingSection
                               ? editingSection.order
-                              : (modules.find(
-                                  (m) => m.id === sectionForm.module_id
-                                )?.sections.length || 0) + 1}
+                              : (sectionsData?.data?.find(
+                                  (m: any) => m.id === sectionForm.module_id
+                                )?.sections?.length || 0) + 1}
                           </Badge>
                         </div>
 
@@ -923,8 +950,8 @@ export default function CourseSections() {
                             <BookOpen className="w-3 h-3 mr-1" />
                             Module:{" "}
                             {
-                              modules.find(
-                                (m) => m.id === sectionForm.module_id
+                              sectionsData?.data?.find(
+                                (m: any) => m.id === sectionForm.module_id
                               )?.title
                             }
                           </div>

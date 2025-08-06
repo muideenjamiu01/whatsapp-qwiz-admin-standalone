@@ -58,9 +58,14 @@ import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
 import { coursesApi } from "../../../hooks/useCourses";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../../../components/ui/pagination";
-
-
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../../../components/ui/pagination";
 
 export default function CourseDetails() {
   const navigate = useNavigate();
@@ -79,7 +84,7 @@ export default function CourseDetails() {
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
-  console.warn(setPageNumber, setPageSize, setStatusFilter,setSearchTerm);
+  console.warn(setPageNumber, setPageSize, setStatusFilter, setSearchTerm);
 
   const { data: overviewData, isLoading } = useQuery({
     queryKey: [
@@ -155,12 +160,11 @@ export default function CourseDetails() {
     }
   };
 
-    const handlePreviousPage = () => {
+  const handlePreviousPage = () => {
     if (pageNumber > 1) {
       setPageNumber(pageNumber - 1);
     }
   };
-
 
   const handleNextPage = () => {
     if (pageNumber < users?.meta.totalPages) {
@@ -460,7 +464,7 @@ export default function CourseDetails() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                           <div className="text-center">
                             <div className="text-2xl font-bold">
                               {module.sectionCount}
@@ -485,67 +489,77 @@ export default function CourseDetails() {
                               Avg. Time
                             </div>
                           </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">
+                              {module.completedCount}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Completion Count
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">
+                              {module.completionRate}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Completion Rate
+                            </div>
+                          </div>
                         </div>
 
                         {/* Sections */}
                         <div className="space-y-3">
                           <h4 className="font-medium">Sections</h4>
-                          {modulesData?.data?.sections
-                            ?.filter(
-                              (section: any) => section.moduleId === module.id
-                            )
-                            .map((section: any) => (
-                              <div
-                                key={section.id}
-                                className="flex items-center justify-between p-3 border rounded-lg"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full">
-                                    {getMediaIcon(section.mediaType)}
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">
-                                      {section.title}
-                                    </p>
-                                    <p className="text-sm text-gray-600">
-                                      {section.mediaType} •{" "}
-                                      {section.averageTime}
-                                    </p>
-                                  </div>
+                          {module.sections?.map((section: any) => (
+                            <div
+                              key={section.id}
+                              className="flex items-center justify-between p-3 border rounded-lg"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full">
+                                  {getMediaIcon(section.mediaType)}
                                 </div>
-                                <div className="flex items-center space-x-4">
-                                  <div className="text-right">
-                                    <p className="text-sm font-medium">
-                                      {section.completionRate}%
-                                    </p>
-                                    <p className="text-xs text-gray-600">
-                                      completion
-                                    </p>
-                                  </div>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm">
-                                        <MoreHorizontal className="w-4 h-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                      <DropdownMenuItem>
-                                        <Eye className="w-4 h-4 mr-2" />
-                                        Preview
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem>
-                                        <Edit className="w-4 h-4 mr-2" />
-                                        Edit Section
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem className="text-red-600">
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Section
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+                                <div>
+                                  <p className="font-medium">{section.title}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {section.mediaType} •{" "}
+                                    {section.estimated_duration}
+                                  </p>
                                 </div>
                               </div>
-                            ))}
+                              <div className="flex items-center space-x-4">
+                                <div className="text-right">
+                                  <p className="text-sm font-medium">
+                                    {section.completion_rate}%
+                                  </p>
+                                  <p className="text-xs text-gray-600">
+                                    completion
+                                  </p>
+                                </div>
+                                {/* <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuItem>
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      Preview
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Edit className="w-4 h-4 mr-2" />
+                                      Edit Section
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600">
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Delete Section
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu> */}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </CardContent>
                     </Card>
@@ -666,48 +680,48 @@ export default function CourseDetails() {
                     </Table>
                   </CardContent>
                 </Card>
-                 {/* Pagination */}
-              {users?.meta?.totalResults > 0 &&
-                users?.meta?.totalResults > 10 && (
-                  <div className="mt-6">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            onClick={handlePreviousPage}
-                            size={"sm"}
-                            className={pageNumber === 1 ? "disabled" : ""}
-                          />
-                        </PaginationItem>
-                        {Array.from(
-                          { length: users?.meta.totalPages },
-                          (_, i) => i + 1
-                        ).map((page) => (
-                          <PaginationItem key={page}>
-                            <PaginationLink
+                {/* Pagination */}
+                {users?.meta?.totalResults > 0 &&
+                  users?.meta?.totalResults > 10 && (
+                    <div className="mt-6">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={handlePreviousPage}
                               size={"sm"}
-                              isActive={page === pageNumber}
-                              onClick={() => setPageNumber(page)}
-                            >
-                              {page}
-                            </PaginationLink>
+                              className={pageNumber === 1 ? "disabled" : ""}
+                            />
                           </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                          <PaginationNext
-                            onClick={handleNextPage}
-                            className={
-                              pageNumber === users?.meta.totalPages
-                                ? "disabled"
-                                : ""
-                            }
-                            size={"sm"}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
+                          {Array.from(
+                            { length: users?.meta.totalPages },
+                            (_, i) => i + 1
+                          ).map((page) => (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                size={"sm"}
+                                isActive={page === pageNumber}
+                                onClick={() => setPageNumber(page)}
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={handleNextPage}
+                              className={
+                                pageNumber === users?.meta.totalPages
+                                  ? "disabled"
+                                  : ""
+                              }
+                              size={"sm"}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
                 {users?.data?.length === 0 && (
                   <div className="text-center py-12">
                     <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
