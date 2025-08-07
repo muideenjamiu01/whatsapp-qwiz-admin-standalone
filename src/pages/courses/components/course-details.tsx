@@ -7,11 +7,11 @@ import {
   BookOpen,
   Clock,
   CheckCircle,
-  MoreHorizontal,
+  // MoreHorizontal,
   Search,
-  Eye,
-  Edit,
-  Trash2,
+  // Eye,
+  // Edit,
+  // Trash2,
   Video,
   ImageIcon,
   FileText,
@@ -40,12 +40,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuTrigger,
+// } from "../../../components/ui/dropdown-menu";
 import {
   Table,
   TableBody,

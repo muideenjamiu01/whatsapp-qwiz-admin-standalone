@@ -53,7 +53,6 @@ import { coursesApi } from "../../../hooks/useCourses";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { set } from "react-hook-form";
 import { Textarea } from "../../../components/ui/textarea";
 
 interface Section {
@@ -80,67 +79,12 @@ interface Module {
   sections: Section[];
 }
 
-const mockModules: Module[] = [
-  {
-    id: "module-001",
-    title: "Who We Are",
-    description:
-      "Introduction to Access Group's history, identity, and achievements",
-    order: 1,
-    sections: [
-      {
-        id: "section-001",
-        title: "Where We've Been",
-        description: "A journey through Access Group's history",
-        order: 1,
-        media_type: "video",
-        media_url: "https://example.com/video1.mp4",
-        module_id: "module-001",
-        status: "active",
-        estimatedTime: "3 mins",
-        completionRate: 95.5,
-      },
-      {
-        id: "section-002",
-        title: "Where It All Began",
-        description: "The founding story of Access Group",
-        order: 2,
-        media_type: "video",
-        media_url: "https://example.com/video2.mp4",
-        module_id: "module-001",
-        status: "active",
-        estimatedTime: "2.5 mins",
-        completionRate: 92.3,
-      },
-    ],
-  },
-  {
-    id: "module-002",
-    title: "Our Culture",
-    description:
-      "Understanding Access Group's vision, mission, and core values",
-    order: 2,
-    sections: [
-      {
-        id: "section-003",
-        title: "What We Are Aiming For (Vision)",
-        description: "Access Group's vision for the future",
-        order: 1,
-        media_type: "video",
-        media_url: "https://example.com/video3.mp4",
-        module_id: "module-002",
-        status: "active",
-        estimatedTime: "2 mins",
-        completionRate: 88.7,
-      },
-    ],
-  },
-];
+
 
 export default function CourseSections() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [modules, setModules] = useState<Module[]>(mockModules);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
@@ -182,6 +126,7 @@ export default function CourseSections() {
       }),
     staleTime: 1000 * 60 * 60,
   });
+    const [modules, setModules] = useState<Module[]>(sectionsData?.data);
 
   console.warn(setPageNumber, setPageSize);
 
@@ -711,7 +656,7 @@ export default function CourseSections() {
                             <p className="text-xs text-muted-foreground">
                               This section will be added to:{" "}
                               {
-                                sectionsData?.data?.find(
+                                modules?.find(
                                   (m: any) => m.id === sectionForm.module_id
                                 )?.title
                               }
