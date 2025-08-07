@@ -32,8 +32,8 @@ export const coursesApi = {
   getCourseDetailsModules: ({ courseId }: any) =>
     api.get(`/api/course-details-module-section/${courseId}`).then(({ data }) => data),
   
-  getCourseDetailsUsers: ({ courseId }: any) =>
-    api.get(`/api/course-details-course-user/${courseId}?pageNumber=2&pageSize=5&searchTerm=john`).then(({ data }) => data),
+  getCourseDetailsUsers: ({ courseId,pageNumber, pageSize,searchTerm }: any) =>
+    api.get(`/api/course-details-course-user/${courseId}?pageNumber=${pageNumber}&pageSize=${pageSize}&searchTerm=${searchTerm}`).then(({ data }) => data),
 
   updateCourse: ({ courseId, payload}: any) =>
     api.put(`/api/courses/${courseId}`, payload).then(({ data }) => data),

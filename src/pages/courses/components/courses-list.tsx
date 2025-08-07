@@ -149,7 +149,7 @@ export default function CoursesList({
     id: string;
   } | null>(null);
 
-  console.log(setPageNumber,setPageSize, pageNumber,
+  console.warn(setPageNumber,setPageSize, pageNumber,
   pageSize,)
 
   const { data, meta } = response;

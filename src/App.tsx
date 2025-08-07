@@ -40,7 +40,6 @@ function App() {
     {/* </BrowserRouter> */}
 </>
     </Layout>
-
     <Toaster/> 
     </>
   )

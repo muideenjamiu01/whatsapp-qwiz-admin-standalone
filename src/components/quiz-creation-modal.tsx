@@ -54,7 +54,7 @@ const createQuiz= useCreateQuiz()
   }
 
   const handleSaveAsDraft = () => {
-    console.log("Saving as draft:", quizData)
+    console.warn("Saving as draft:", quizData)
     toast(
         "Your quiz has been saved as a draft.")
     setOpen(false)
@@ -62,7 +62,7 @@ const createQuiz= useCreateQuiz()
   }
 
   const handlePublish = () => {
-    console.log("Publishing quiz:", quizData)
+    console.warn("Publishing quiz:", quizData)
 const data= quizData
     createQuiz.mutate({
       title:data?.name,
@@ -96,7 +96,7 @@ welcome_message:data?.welcomeMessage,
   }
 
   const handleContinueToEditor = () => {
-    console.log("Continuing to full editor:", quizData)
+    console.warn("Continuing to full editor:", quizData)
     setOpen(false)
     navigate("/quizzes/create")
     // In a real app, you would save the data and redirect to the full editor
